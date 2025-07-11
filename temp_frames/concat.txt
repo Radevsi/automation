@@ -1,0 +1,13 @@
+file '/Users/bg/Documents/projects/euler/temp_frames/01_intro.png'
+duration 2
+file '/Users/bg/Documents/projects/euler/temp_frames/02_model_0_claude.png'
+duration 2.5
+file '/Users/bg/Documents/projects/euler/temp_frames/02_model_1_gpt4.png'
+duration 2.5
+file '/Users/bg/Documents/projects/euler/temp_frames/02_model_2_gemini.png'
+duration 2.5
+file '/Users/bg/Documents/projects/euler/temp_frames/03_grid.png'
+duration 4
+file '/Users/bg/Documents/projects/euler/temp_frames/04_outro.png'
+duration 2
+file '/Users/bg/Documents/projects/euler/temp_frames/04_outro.png'

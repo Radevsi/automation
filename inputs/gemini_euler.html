@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Euler's Identity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=KaTeX_Main&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .katex {
+            font-family: 'KaTeX_Main', serif;
+        }
+        /* Custom styles for better slider appearance */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #d3d3d3;
+            border-radius: 5px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #1e40af; /* Tailwind blue-800 */
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #1e40af;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Left Column: Visualization -->
+        <div class="flex flex-col items-center justify-center">
+            <canvas id="complexPlane" width="400" height="400" class="rounded-lg bg-gray-50 dark:bg-gray-700 w-full max-w-sm aspect-square"></canvas>
+        </div>
+
+        <!-- Right Column: Explanation and Controls -->
+        <div class="flex flex-col justify-center space-y-6">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Visualizing Euler's Identity</h1>
+                <p class="mt-2 text-lg katex text-center p-3 bg-blue-50 dark:bg-gray-700 rounded-lg text-blue-900 dark:text-blue-200">e<sup>i&pi;</sup> + 1 = 0</p>
+            </div>
+
+            <div class="text-base">
+                <p>This shows the journey of the term <span class="katex font-semibold">e<sup>i&theta;</sup></span> on the complex plane. It always traces a point on a circle with a radius of 1.</p>
+                <p class="mt-2">Use the slider to change the angle <span class="katex">&theta;</span> and see where the point lands.</p>
+            </div>
+
+            <!-- Slider Controls -->
+            <div class="space-y-4 pt-4">
+                <label for="angleSlider" class="font-semibold text-lg">Angle <span class="katex">&theta;</span> = <span id="angleValue">0.00</span> &pi;</label>
+                <input type="range" id="angleSlider" min="0" max="2" step="0.01" value="0" class="w-full">
+                 <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>0</span>
+                    <span>&pi;/2</span>
+                    <span>&pi;</span>
+                    <span>3&pi;/2</span>
+                    <span>2&pi;</span>
+                </div>
+            </div>
+            
+            <!-- Explanation Box -->
+            <div id="explanationBox" class="p-4 rounded-lg bg-yellow-50 dark:bg-gray-700 border-l-4 border-yellow-400 dark:border-yellow-500 transition-all duration-300">
+                <p id="explanationText" class="text-yellow-800 dark:text-yellow-200"></p>
+            </div>
+            
+            <button id="animateButton" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900">
+                Animate to &pi;
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Element Selection ---
+        const canvas = document.getElementById('complexPlane');
+        const ctx = canvas.getContext('2d');
+        const slider = document.getElementById('angleSlider');
+        const angleValueDisplay = document.getElementById('angleValue');
+        const explanationText = document.getElementById('explanationText');
+        const explanationBox = document.getElementById('explanationBox');
+        const animateButton = document.getElementById('animateButton');
+
+        // --- Canvas and Drawing Constants ---
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const radius = width * 0.4; // 40% of canvas width
+
+        // --- Main Drawing Function ---
+        function draw() {
+            // Get the current angle from the slider
+            const thetaMultiplier = parseFloat(slider.value);
+            const theta = thetaMultiplier * Math.PI;
+
+            // Update the displayed angle value
+            angleValueDisplay.textContent = thetaMultiplier.toFixed(2);
+
+            // Clear the canvas for redrawing
+            ctx.clearRect(0, 0, width, height);
+
+            // --- Draw Complex Plane ---
+            drawAxes();
+            drawUnitCircle();
+            drawLabels();
+
+            // --- Calculate Point Coordinates ---
+            // Euler's formula: e^(i*theta) = cos(theta) + i*sin(theta)
+            // The x-coordinate is cos(theta) and y is sin(theta)
+            const x = centerX + radius * Math.cos(theta);
+            const y = centerY - radius * Math.sin(theta); // Subtract because canvas y-axis is inverted
+
+            // --- Draw Visualization Elements ---
+            drawAngleArc(theta);
+            drawVector(x, y);
+            drawPoint(x, y);
+
+            // --- Update Explanations ---
+            updateExplanation(thetaMultiplier, x, y);
+        }
+
+        // --- Helper Drawing Functions ---
+        function drawAxes() {
+            ctx.strokeStyle = '#9ca3af'; // gray-400
+            ctx.lineWidth = 1;
+            // X-Axis (Real)
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(width, centerY);
+            ctx.stroke();
+            // Y-Axis (Imaginary)
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, height);
+            ctx.stroke();
+        }
+
+        function drawUnitCircle() {
+            ctx.strokeStyle = '#6b7280'; // gray-500
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]); // Dashed line for the circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset to solid line
+        }
+        
+        function drawLabels() {
+            ctx.fillStyle = document.body.classList.contains('dark') ? '#d1d5db' : '#374151'; // gray-300 or gray-700
+            ctx.font = '16px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Main labels
+            ctx.fillText('1', centerX + radius + 15, centerY);
+            ctx.fillText('-1', centerX - radius - 15, centerY);
+            ctx.fillText('i', centerX, centerY - radius - 15);
+            ctx.fillText('-i', centerX, centerY + radius + 15);
+
+            // Axis labels
+            ctx.font = 'italic 14px Inter';
+            ctx.fillText('Real Axis', centerX, height - 15);
+            ctx.save();
+            ctx.translate(15, centerY);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Imaginary Axis', 0, 0);
+            ctx.restore();
+        }
+
+        function drawVector(x, y) {
+            ctx.strokeStyle = '#3b82f6'; // blue-500
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+
+        function drawPoint(x, y) {
+            ctx.fillStyle = '#1e40af'; // blue-800
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // White inner circle for highlight
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function drawAngleArc(theta) {
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.2)'; // red-500 with transparency
+            ctx.strokeStyle = '#ef4444'; // red-500
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius * 0.3, 0, -theta, true); // Negative theta due to inverted y
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        // --- Dynamic Explanation Logic ---
+        function updateExplanation(thetaMultiplier) {
+            explanationBox.className = 'p-4 rounded-lg border-l-4 transition-all duration-300'; // Reset class
+            let text = '';
+            
+            if (thetaMultiplier === 0) {
+                explanationBox.classList.add('bg-blue-50', 'dark:bg-gray-700', 'border-blue-400');
+                text = 'At &theta;=0, e<sup>i0</sup> = cos(0) + i*sin(0) = 1. We are at the point (1, 0).';
+            } else if (thetaMultiplier > 0 && thetaMultiplier < 0.99) {
+                explanationBox.classList.add('bg-yellow-50', 'dark:bg-gray-700', 'border-yellow-400');
+                text = 'As &theta; increases, the point travels counter-clockwise around the circle.';
+            } else if (thetaMultiplier >= 0.99 && thetaMultiplier <= 1.01) {
+                explanationBox.classList.add('bg-green-50', 'dark:bg-gray-700', 'border-green-500');
+                text = '<strong>This is it!</strong> At &theta;=&pi;, e<sup>i&pi;</sup> = cos(&pi;) + i*sin(&pi;) = -1. The point is exactly (-1, 0).';
+            } else if (thetaMultiplier > 1.01 && thetaMultiplier < 1.99) {
+                 explanationBox.classList.add('bg-yellow-50', 'dark:bg-gray-700', 'border-yellow-400');
+                text = 'Continuing past &pi;, the point moves through the lower half of the plane.';
+            } else {
+                explanationBox.classList.add('bg-blue-50', 'dark:bg-gray-700', 'border-blue-400');
+                text = 'At &theta;=2&pi;, we complete a full circle and return to 1.';
+            }
+
+            const finalStep = '<br><br>Since <strong>e<sup>i&pi;</sup> = -1</strong>, a simple rearrangement gives the famous identity: <strong>e<sup>i&pi;</sup> + 1 = 0</strong>.';
+            explanationText.innerHTML = (thetaMultiplier >= 0.99 && thetaMultiplier <= 1.01) ? text + finalStep : text;
+        }
+        
+        // --- Animation Logic ---
+        function animateToPi() {
+            animateButton.disabled = true;
+            animateButton.textContent = 'Animating...';
+            let start = parseFloat(slider.value);
+            let end = 1.0; // Target is pi
+            let duration = 1500; // 1.5 seconds
+            let startTime = null;
+
+            function animationStep(timestamp) {
+                if (!startTime) startTime = timestamp;
+                let progress = timestamp - startTime;
+                let amount = progress / duration;
+                
+                if (amount > 1) amount = 1;
+                
+                let currentValue = start + (end - start) * amount;
+                slider.value = currentValue;
+                draw();
+                
+                if (amount < 1) {
+                    requestAnimationFrame(animationStep);
+                } else {
+                    slider.value = 1.0; // Ensure it lands exactly on pi
+                    draw();
+                    animateButton.disabled = false;
+                    animateButton.textContent = 'Animate to π';
+                }
+            }
+            requestAnimationFrame(animationStep);
+        }
+
+        // --- Event Listeners ---
+        slider.addEventListener('input', draw);
+        animateButton.addEventListener('click', animateToPi);
+        
+        // --- Initial Draw ---
+        // We need to wait for the dark mode class to be potentially set by the environment
+        // A small timeout ensures the initial colors are correct.
+        setTimeout(() => {
+            draw();
+        }, 50);
+
+    </script>
+</body>
+</html>
+

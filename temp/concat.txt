@@ -1,0 +1,15 @@
+file '/Users/bg/Documents/projects/euler/temp/text_1752238757.613449.png'
+duration 2
+file '/Users/bg/Documents/projects/euler/temp/scoring_claude_1752238757.627872.png'
+duration 2.5
+file '/Users/bg/Documents/projects/euler/temp/scoring_gpt4_1752238757.642754.png'
+duration 2.5
+file '/Users/bg/Documents/projects/euler/temp/scoring_gemini_1752238757.656355.png'
+duration 2.5
+file '/Users/bg/Documents/projects/euler/temp/scoring_llama_1752238757.670387.png'
+duration 2.5
+file '/Users/bg/Documents/projects/euler/temp/winner_1752238757.685131.png'
+duration 3
+file '/Users/bg/Documents/projects/euler/temp/text_1752238757.698589.png'
+duration 2
+file '/Users/bg/Documents/projects/euler/temp/text_1752238757.698589.png'

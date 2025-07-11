@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Euler's Identity Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00ff88, #0088ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .formula {
+            text-align: center;
+            font-size: 2em;
+            margin: 20px 0;
+            font-family: 'Georgia', serif;
+            letter-spacing: 2px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #111;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 255, 136, 0.2);
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        
+        .controls {
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #00ff88, #0088ff);
+            border: none;
+            color: #000;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+        }
+        
+        .info {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info h2 {
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+        
+        .slider-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            background: #333;
+            outline: none;
+            border-radius: 5px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #00ff88, #0088ff);
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        .angle-display {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 10px 0;
+            color: #00ff88;
+        }
+        
+        .complex-display {
+            text-align: center;
+            font-size: 1.1em;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 136, 255, 0.1);
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Euler's Identity</h1>
+        <div class="formula">e<sup>iπ</sup> + 1 = 0</div>
+        
+        <div class="canvas-container">
+            <canvas id="canvas" width="560" height="560"></canvas>
+        </div>
+        
+        <div class="slider-container">
+            <label for="angleSlider">Angle (θ): </label>
+            <input type="range" id="angleSlider" min="0" max="628" value="0" step="1">
+            <div class="angle-display" id="angleDisplay">θ = 0.00 radians</div>
+            <div class="complex-display" id="complexDisplay">e<sup>i·0.00</sup> = 1.00 + 0.00i</div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="animateToZero()">Start at 0</button>
+            <button onclick="animateToPi()">Animate to π</button>
+            <button onclick="reset()">Reset</button>
+        </div>
+        
+        <div class="info">
+            <h2>Understanding the Visualization</h2>
+            <p><strong>The Unit Circle:</strong> The large circle represents the complex plane's unit circle (radius = 1).</p>
+            <p><strong>The Blue Point:</strong> Shows the position of e<sup>iθ</sup> as it moves around the circle.</p>
+            <p><strong>The Green Line:</strong> Connects the origin to e<sup>iθ</sup>, showing the complex number.</p>
+            <p><strong>At θ = π:</strong> The point reaches -1 on the real axis, so e<sup>iπ</sup> = -1, and therefore e<sup>iπ</sup> + 1 = 0!</p>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const slider = document.getElementById('angleSlider');
+        const angleDisplay = document.getElementById('angleDisplay');
+        const complexDisplay = document.getElementById('complexDisplay');
+        
+        let animationId = null;
+        let currentAngle = 0;
+        
+        function draw(angle) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 200;
+            
+            // Clear canvas
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                const x = i * canvas.width / 10;
+                const y = i * canvas.height / 10;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Draw axes
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+            
+            // Draw unit circle
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Calculate position
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY - radius * Math.sin(angle); // Negative because canvas y increases downward
+            
+            // Draw angle arc
+            ctx.strokeStyle = 'rgba(0, 255, 136, 0.3)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 50, 0, -angle, true);
+            ctx.stroke();
+            
+            // Draw radius line
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            
+            // Draw point
+            ctx.fillStyle = '#0088ff';
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Draw projections
+            ctx.strokeStyle = 'rgba(0, 136, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, centerY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(centerX, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Label important points
+            ctx.fillStyle = '#fff';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('1', centerX + radius + 20, centerY + 5);
+            ctx.fillText('-1', centerX - radius - 20, centerY + 5);
+            ctx.fillText('i', centerX - 5, centerY - radius - 10);
+            ctx.fillText('-i', centerX - 5, centerY + radius + 20);
+            
+            // Show current value
+            const real = Math.cos(angle);
+            const imag = Math.sin(angle);
+            ctx.fillStyle = '#00ff88';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'left';
+            const valueText = `e^(i·${(angle).toFixed(2)}) = ${real.toFixed(2)} + ${imag.toFixed(2)}i`;
+            ctx.fillText(valueText, 20, 30);
+            
+            // Special case for π
+            if (Math.abs(angle - Math.PI) < 0.01) {
+                ctx.fillStyle = '#ff0088';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('e^(iπ) = -1', centerX, centerY + radius + 60);
+                ctx.fillText('e^(iπ) + 1 = 0 ✨', centerX, centerY + radius + 90);
+            }
+        }
+        
+        function updateDisplay(angle) {
+            angleDisplay.textContent = `θ = ${angle.toFixed(2)} radians`;
+            const real = Math.cos(angle);
+            const imag = Math.sin(angle);
+            const imagSign = imag >= 0 ? '+' : '-';
+            complexDisplay.innerHTML = `e<sup>i·${angle.toFixed(2)}</sup> = ${real.toFixed(2)} ${imagSign} ${Math.abs(imag).toFixed(2)}i`;
+        }
+        
+        slider.addEventListener('input', (e) => {
+            currentAngle = parseFloat(e.target.value) / 100;
+            draw(currentAngle);
+            updateDisplay(currentAngle);
+        });
+        
+        function animateToZero() {
+            if (animationId) cancelAnimationFrame(animationId);
+            const targetAngle = 0;
+            const step = 0.05;
+            
+            function animate() {
+                if (currentAngle > targetAngle + 0.01) {
+                    currentAngle -= step;
+                    slider.value = currentAngle * 100;
+                    draw(currentAngle);
+                    updateDisplay(currentAngle);
+                    animationId = requestAnimationFrame(animate);
+                } else {
+                    currentAngle = targetAngle;
+                    slider.value = currentAngle * 100;
+                    draw(currentAngle);
+                    updateDisplay(currentAngle);
+                }
+            }
+            animate();
+        }
+        
+        function animateToPi() {
+            if (animationId) cancelAnimationFrame(animationId);
+            const targetAngle = Math.PI;
+            const step = 0.02;
+            
+            function animate() {
+                if (currentAngle < targetAngle - 0.01) {
+                    currentAngle += step;
+                    slider.value = currentAngle * 100;
+                    draw(currentAngle);
+                    updateDisplay(currentAngle);
+                    animationId = requestAnimationFrame(animate);
+                } else {
+                    currentAngle = targetAngle;
+                    slider.value = currentAngle * 100;
+                    draw(currentAngle);
+                    updateDisplay(currentAngle);
+                }
+            }
+            animate();
+        }
+        
+        function reset() {
+            if (animationId) cancelAnimationFrame(animationId);
+            currentAngle = 0;
+            slider.value = 0;
+            draw(0);
+            updateDisplay(0);
+        }
+        
+        // Initial draw
+        draw(0);
+        updateDisplay(0);
+    </script>
+</body>
+</html>
